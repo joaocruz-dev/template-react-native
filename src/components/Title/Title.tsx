@@ -22,7 +22,7 @@ export default class Title extends React.Component<TitleProps> {
   render () {
     return (
       <Text
-        {...this}
+        {...this.props}
         style={[styles.title, { color: this.props.color }]}
       >
         {this.props.children}
@@ -33,7 +33,7 @@ export default class Title extends React.Component<TitleProps> {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 40,
+    fontSize: 24,
     fontWeight: '700'
   }
 })
