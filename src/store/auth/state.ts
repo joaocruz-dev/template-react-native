@@ -1,19 +1,15 @@
 import { User } from '@/domain'
 
 interface AuthState {
-  jwt: {
-    token: string | null
-  },
-  user: User | null,
   isAuth: boolean,
+
+  user: User | null
 }
 
 const state: AuthState = {
-  jwt: {
-    token: null
-  },
-  user: null,
-  isAuth: false
+  isAuth: false,
+
+  user: null
 }
 
 export default state
