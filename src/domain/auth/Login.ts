@@ -1,4 +1,7 @@
 export default class Login {
-  email: string = ''
-  public password: string = ''
+  constructor (
+    public login: string = '',
+    public password: string = '',
+    public remember: boolean = true
+  ) {}
 }

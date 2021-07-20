@@ -1,4 +1,4 @@
-import User from './user/User'
-import Login from './auth/Login'
+import User from './User/User'
+import Login from './Auth/Login'
 
 export { User, Login }
