@@ -1,12 +1,19 @@
 import React from 'react'
+import * as Yup from 'yup'
+import { Formik } from 'formik'
 import { View, StyleSheet } from 'react-native'
 
-import { loginFn } from '@/store/auth'
-import { Login, User } from '@/domain'
+import { Login } from '@/domain'
+import LogoSvg from '@/assets/logo.svg'
 import { Input, Button } from '@/components'
-import { setLoadingFn } from '@/store/layout'
-import LogoSvg from '@/assets/earthtechnollogy.svg'
+import AuthProvider from '@/provider/AuthProvider'
+import { setLoadingFn, showMessageFn } from '@/store/layout'
 import { RootState, RootDispatch, connectStore } from '@/store'
+
+const loginSchema = Yup.object().shape({
+  login: Yup.string().required('Campo obrigatório.').email('Email inválido.'),
+  password: Yup.string().required('Campo obrigatório.').min(8, 'Senha deve conter 8 ou mais caracteres.')
+})
 
 interface AuthLoginProps {
   dispatch: RootDispatch,
@@ -15,23 +22,35 @@ interface AuthLoginProps {
 
 class AuthLogin extends React.Component<AuthLoginProps> {
   state = {
+    isNewUser: true,
     login: new Login()
   }
 
-  handleLogin = () => {
+  authProvider = new AuthProvider()
+
+  async componentDidMount () {
     this.props.dispatch(setLoadingFn(true))
-
-    setTimeout(() => {
-      const user = new User(null, 'Convidado', this.state.login.email)
-
-      this.props.dispatch(loginFn({ user: JSON.parse(JSON.stringify(user)) }))
+    try {
+      const login = await this.authProvider.getUser()
+      if (login) {
+        this.state.login.login = login
+        this.setState({ login: this.state.login, isNewUser: false })
+      }
+    } finally {
       this.props.dispatch(setLoadingFn(false))
-    }, 750)
+    }
   }
 
-  handleChangeLogin = (name: keyof Login, value: string) => {
-    this.state.login[name] = value
-    this.setState({ login: this.state.login })
+  handleLogin = async (login: Login) => {
+    this.props.dispatch(setLoadingFn(true))
+    try {
+      const message = await this.authProvider.login(login)
+      this.props.dispatch(showMessageFn({ text: message }))
+    } catch (error) {
+      this.props.dispatch(showMessageFn({ text: error.message }))
+    } finally {
+      this.props.dispatch(setLoadingFn(false))
+    }
   }
 
   render () {
@@ -40,17 +59,34 @@ class AuthLogin extends React.Component<AuthLoginProps> {
         <View style={styles.logo}>
           <LogoSvg width="100%" />
         </View>
-        <Input
-          label="Email"
-          value={this.state.login.email}
-          onChangeText={value => this.handleChangeLogin('email', value)}
-        />
-        <Input
-          label="Senha"
-          value={this.state.login.password}
-          onChangeText={value => this.handleChangeLogin('password', value)}
-        />
-        <Button title="Entrar" onPress={this.handleLogin} />
+        <Formik
+          validationSchema={loginSchema}
+          initialValues={this.state.login}
+          onSubmit={this.handleLogin}
+        >
+          {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+            <>
+              <Input
+                label="Email"
+                type="email"
+                value={values.login}
+                disabled={!this.state.isNewUser}
+                error={touched.login && errors.login}
+                onBlur={handleBlur('login')}
+                onChangeText={handleChange('login')}
+              />
+              <Input
+                label="Senha"
+                type="password"
+                value={values.password}
+                error={touched.password && errors.password}
+                onBlur={handleBlur('password')}
+                onChangeText={handleChange('password')}
+              />
+              <Button label="Entrar" onPress={() => handleSubmit()} />
+            </>
+          )}
+        </Formik>
       </View>
     )
   }
@@ -63,7 +99,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   logo: {
-    margin: 16,
     width: '60%'
   }
 })

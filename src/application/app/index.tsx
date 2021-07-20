@@ -1,22 +1,34 @@
 import React from 'react'
-import { createStackNavigator } from '@react-navigation/stack'
+import { BottomNavigation } from 'react-native-paper'
 
-import theme from '@/services/theme'
+import AppSettings from './settings/AppSettings'
 import AppDashboard from './dashboard/AppDashboard'
 
-const { Navigator, Screen } = createStackNavigator()
+export default class AppRoutes extends React.Component {
+  state = {
+    index: 0,
+    routes: [
+      { key: 'dashboard', title: 'Home', icon: 'home' },
+      { key: 'settings', title: 'Configurações', icon: 'cog' }
+    ]
+  }
 
-const AppRoutes = (
-  <Navigator
-    headerMode="none"
-    screenOptions={{
-      cardStyle: {
-        backgroundColor: theme.colors.background
-      }
-    }}
-  >
-    <Screen name="app/dashboard" component={AppDashboard} />
-  </Navigator>
-)
+  handleIndex = (index: number) => {
+    this.setState({ index })
+  }
 
-export default AppRoutes
+  render () {
+    const renderScene = BottomNavigation.SceneMap({
+      settings: () => <AppSettings />,
+      dashboard: () => <AppDashboard />
+    })
+
+    return (
+      <BottomNavigation
+        navigationState={{ index: this.state.index, routes: this.state.routes }}
+        onIndexChange={this.handleIndex}
+        renderScene={renderScene}
+      />
+    )
+  }
+}

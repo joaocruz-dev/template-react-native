@@ -1,11 +1,11 @@
 import React from 'react'
+import { Title } from 'react-native-paper'
 import { View, StyleSheet } from 'react-native'
 
-import { Title } from '@/components'
 import { RootState, connectStore } from '@/store'
 
 interface AppDashboardProps {
-  auth: RootState['auth'],
+  auth: RootState['auth']
 }
 
 class AppDashboard extends React.Component<AppDashboardProps> {
