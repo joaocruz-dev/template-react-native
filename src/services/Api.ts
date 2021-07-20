@@ -1,21 +1,21 @@
-import axios, { AxiosInstance, Method, ResponseType } from 'axios'
+import axios, { AxiosInstance, Method, AxiosRequestConfig } from 'axios'
 
-import Environment from './Environment'
-
-interface Options {
-  query?: Record<string, string>,
-  responseType?: ResponseType
+interface Options extends AxiosRequestConfig {
+  query?: Record<string, string>
 }
 
 export default class Api {
+  constructor (
+    private _baseURL: string,
+    public token: string | boolean = false
+  ) {}
+
   private request<T> (request: (api: AxiosInstance, resolve: (value: any) => void, reject: (reason?: any) => void) => void): Promise<T> {
     const api = axios.create({
-      baseURL: Environment.endPoint,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: Environment.Bearer
-      }
+      baseURL: this._baseURL,
+      headers: { 'Content-Type': 'application/json' }
     })
+    if (this.token) api.defaults.headers.Authorization = `Bearer ${this.token}`
     return new Promise((resolve, reject) => request(api, resolve, reject))
   }
 
@@ -25,9 +25,8 @@ export default class Api {
     const query = this.objectToQuery(options.query || {})
 
     path += query === '?' ? '' : query
-    const responseType = options.responseType
     return this.request<T>((api, resolve, reject) => {
-      api.request({ method, url: path, data, responseType })
+      api.request({ ...options, method, url: path, data })
         .then(res => resolve(res.data))
         .catch(error => this.error(error, reject))
     })
